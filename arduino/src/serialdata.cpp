@@ -11,8 +11,9 @@ void loop()
     char* n = "000";
     for (int i = 0; i < 300; i++) {
         sprintf(n, "%03d", i);
-        Serial.println(n);
+        Serial.print(n);
+        delay(500);
     }
 
-    delay(250);
+    delay(2000);
 }

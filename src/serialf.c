@@ -1,32 +1,15 @@
-#ifndef SERIALF_H
-#define SERIALF_H
-#include <serialf.h>
+#include "serialf.h"
 
-#ifndef STDIO_H
-#define STDIO_H
 #include <stdio.h>
-#endif
-
-#ifndef ERRNO_H
-#define ERRNO_H
+#include <stdlib.h>
 #include <errno.h>
-#endif
-
-#ifndef TERMIOS_H
-#define TERMIOS_H
 #include <termios.h>
-#endif
-
-#ifndef UNISTD_H
-#define UNISTD_H
 #include <unistd.h>
-#endif
-
-#ifndef STRING_H
-#define STRING_H
 #include <string.h>
-#endif
+#include <fcntl.h>
 
+const char *serial_port = "/dev/ttyUSB0";
+int fd;
 
 int set_interface_attribs (int fd, int speed, int parity)
 {
@@ -83,4 +66,21 @@ void set_blocking (int fd, int should_block)
     if (tcsetattr (fd, TCSANOW, &tty) != 0)
         fprintf(stderr, "error %d setting term attributes", errno);
 }
-#endif
+
+void serial_init()
+{
+    fd = open(serial_port, O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd < 0) {
+        fprintf(stderr, "Error opening %s\n", serial_port);
+        exit(1);
+    }
+
+    set_interface_attribs(fd, B9600, 0);
+    set_blocking(fd, 0);
+}
+
+void s_read(char *buf, int size)
+{
+    int n = read(fd, buf, size);
+    buf[n] = '\0';
+}
