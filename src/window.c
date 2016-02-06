@@ -1,40 +1,46 @@
 #include "window.h"
 
 bool w_open;
-int scr;
+int scr, depth, fd;
+int _win_h, _win_w;
 
 Display *dpy;
 Window rootwin;
 Window win;
+
 Colormap cmap;
 GC gc;
 XEvent ev;
 
 void WCreate(int win_h, int win_w)
 {
+    _win_w = win_w;
+    _win_h = win_h;
+
     // Try to connect to XServer
     if (!(dpy=XOpenDisplay(NULL))) {
         fprintf(stderr, "ERROR: Could not open display\n");
         exit(1);
     }
 
-    // Create Window
     scr = DefaultScreen(dpy);
+
+    // Create Window
     rootwin = RootWindow(dpy, scr);
-    cmap = DefaultColormap(dpy, scr);
-    
     win = XCreateSimpleWindow(dpy, rootwin, 1, 1, win_w, win_h, 0,
             BlackPixel(dpy, scr), BlackPixel(dpy, scr));
 
-    XStoreName(dpy, win, "floating");
-    
-    // Create graphic context
-    gc = XCreateGC(dpy, win, 0, NULL);
+    cmap = DefaultColormap(dpy, scr);
+    gc = XCreateGC(dpy, win, 0, 0);
     XSetForeground(dpy, gc, WhitePixel(dpy, scr));
-    XSelectInput(dpy, win, ExposureMask|ButtonPressMask);
+    XSetBackground(dpy, gc, 0);
+    XSelectInput(dpy, win, ExposureMask | ButtonPressMask);
+
 
     // Connect the window to the XServer
+    XStoreName(dpy, win, "floating");
     XMapWindow(dpy, win);
+    XFlush(dpy);
 
     w_open = true;
 }
@@ -42,15 +48,19 @@ void WCreate(int win_h, int win_w)
 void WHandleEvents() 
 {
     XCheckMaskEvent(dpy, ExposureMask|ButtonPressMask, &ev);
-    if (ev.type == Expose && ev.xexpose.count < 1) {
-        // Draw
-        WUpdateFrame();
-    }
-    // Close on mouseclick
-    else if (ev.type == ButtonPress) {
-        w_open = false;
-    }
 
+    switch (ev.type) {
+    case Expose:
+        if (ev.xexpose.count > 0)
+            break;
+
+        WUpdateFrame();
+        break;
+        
+    case ButtonPress:
+        w_open = false;
+        break;
+    }    
 }
 
 bool WIsOpen() 
@@ -65,7 +75,9 @@ void WQuit()
 
 void WClearFrame()
 {
-
+    // TODO: Fix temporay workaround
+    // XClearArea(dpy, 0, 0, _win_w, _win_h, false);
+    XClearWindow(dpy, win);
 }
 
 void WFillRectangle(int x, int y, int w, int h)

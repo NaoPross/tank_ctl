@@ -8,6 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 
+
 const char *serial_port = "/dev/ttyUSB0";
 int fd;
 
@@ -81,6 +82,14 @@ void serial_init()
 
 void s_read(char *buf, int size)
 {
-    int n = read(fd, buf, size);
+    char tmpchr;
+    int n = 0;
+    
+    while (n < size) {
+        int o = read(fd, &tmpchr, 1);
+        
+        buf[n] = tmpchr;
+        n++;
+    }
     buf[n] = '\0';
 }

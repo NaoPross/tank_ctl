@@ -1,5 +1,6 @@
 #include "serialf.h"
 #include "window.h"
+#include "data.h"
 
 #include <X11/Xlib.h>
 #include <stdio.h>
@@ -12,41 +13,37 @@
 
 #define WIN_H 480
 #define WIN_W 620
-#define BAR_W 5
+#define BAR_W 2
 
+#define DATA_N_MAX 500.0
 
-// data for the graph
-int graph_data[WIN_W/BAR_W];
-int graph_arr_size, graph_data_p;
-
-void var_init()
-{
-    memset(graph_data, 0, sizeof(graph_data));
-
-    graph_arr_size = WIN_W/BAR_W;
-    graph_data_p = 0;
-}
-
-void g_arr_add(int value)
-{
-    if (graph_data_p > graph_arr_size) {
-        graph_data_p = 0;
-    } else {
-        graph_data_p++;
-    }
-
-    graph_data[graph_data_p] = value;
-}
-
+// debug
+int cycle = 0;
 
 void WUpdateFrame()
 {
-    for (int i = 0; i < graph_arr_size; i++) {
-        WFillRectangle(
-                i*BAR_W,
-                WIN_H - graph_data[i], 
-                BAR_W,
-                graph_data[i]);
+    int i, val, x, y, w, h;
+    fprintf(stdout, "INFO: cycle = %d\n", cycle);
+
+    if (cycle > WIN_W) {
+        WClearFrame();
+        i = cycle % WIN_W * WIN_W;
+    }
+    else {
+        i = 0;
+    }
+
+    for (; i < cycle; i++) {
+        val = DGetItem(i);
+
+        x = i*BAR_W;
+        y = WIN_H - val/DATA_N_MAX * WIN_H;
+        w = BAR_W;
+        h = val/DATA_N_MAX * WIN_H;
+
+        fprintf(stdout, "INFO: x = %d, y = %d, w = %d, h = %d\n", x, y, w, h);
+        fprintf(stdout, "INFO: dData[%d] = %d\n", i, val);
+        WFillRectangle(x, y, w, h);
     }
 }
 
@@ -55,33 +52,27 @@ void WUpdateFrame()
  **********************************/
 int main()
 {
-    var_init();
+    DInit(WIN_W/BAR_W);
     serial_init();
 
     WCreate(WIN_H, WIN_W);
 
-    // testing {{{
-    char buf[16];
+    char *buf;
     int ibuf;
-    // }}}
+    buf = (char*) calloc(3, sizeof(char));
 
     // app loop
     while (WIsOpen()) {
-        WHandleEvents();
-        WUpdateFrame();
-        
-        // testing {{{
-        s_read(buf, 8);
-        int conv = sscanf(buf, "%d", &ibuf);
+        s_read(buf, 3);
+        fprintf(stdout, "INFO: buf = %s\n", buf);
 
-        if (!conv || conv == EOF) {
-            // fprintf(stderr, "ERROR: failed to convert input\n");
+        if (sscanf(buf, "%d", &ibuf) != EOF) {
+            fprintf(stdout, "INFO: ibuf = %d\n", ibuf);
+            DAddValue(ibuf);
+            cycle++;
         }
-        else if (ibuf != 0) {
-            // fprintf(stdout, "CHR: %s\n", buf);
-            fprintf(stdout, "%d\n", ibuf);
-        }
-        // }}}
+
+        WHandleEvents();
     }
 
     WQuit();
