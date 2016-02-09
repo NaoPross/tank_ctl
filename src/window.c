@@ -1,16 +1,15 @@
 #include "window.h"
 
 bool w_open;
-int scr, depth, fd;
+int scr, fd;
 int _win_h, _win_w;
 
 Display *dpy;
 Window rootwin;
 Window win;
-
-Colormap cmap;
-GC gc;
 XEvent ev;
+
+cairo_surface_t *cs;
 
 void WCreate(int win_h, int win_w)
 {
@@ -30,15 +29,14 @@ void WCreate(int win_h, int win_w)
     win = XCreateSimpleWindow(dpy, rootwin, 1, 1, win_w, win_h, 0,
             BlackPixel(dpy, scr), BlackPixel(dpy, scr));
 
-    cmap = DefaultColormap(dpy, scr);
-    gc = XCreateGC(dpy, win, 0, 0);
-    XSetForeground(dpy, gc, WhitePixel(dpy, scr));
-    XSetBackground(dpy, gc, 0);
+    // Set window trigger events
     XSelectInput(dpy, win, ExposureMask | ButtonPressMask);
 
+    // Create a cairo surface
+    cs = cairo_xlib_surface_create(dpy, win, DefaultVisual(dpy, 0), win_w, win_h);
 
     // Connect the window to the XServer
-    XStoreName(dpy, win, "floating");
+    XStoreName(dpy, win, "tank_ctl - serial");
     XMapWindow(dpy, win);
     XFlush(dpy);
 
@@ -75,12 +73,25 @@ void WQuit()
 
 void WClearFrame()
 {
-    // TODO: Fix temporay workaround
-    // XClearArea(dpy, 0, 0, _win_w, _win_h, false);
-    XClearWindow(dpy, win);
+    cairo_t *c;
+    c = cairo_create(cs);
+
+    cairo_rectangle(c, 0, 0, _win_w, _win_h);
+    cairo_set_source_rgb(c, 0, 0, 0);
+    cairo_fill(c);
+    cairo_show_page(c);
+    cairo_destroy(c);
 }
 
 void WFillRectangle(int x, int y, int w, int h)
 {
-    XFillRectangle(dpy, win, gc, x, y, w, h);
+    cairo_t *c;
+    c = cairo_create(cs);
+    
+    cairo_rectangle(c, x, y, w, h);
+    cairo_set_source_rgb(c, 1, 1, 1);
+    cairo_fill(c);
+    
+    cairo_show_page(c);
+    cairo_destroy(c);
 }

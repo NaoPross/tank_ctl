@@ -1,5 +1,10 @@
 #pragma once
 
+#include <cairo.h>
+#include <cairo-pdf.h>
+#include <cairo-ps.h>
+#include <cairo-xlib.h>
+
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>

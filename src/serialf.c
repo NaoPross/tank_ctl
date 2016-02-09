@@ -86,7 +86,7 @@ void s_read(char *buf, int size)
     int n = 0;
     
     while (n < size) {
-        int o = read(fd, &tmpchr, 1);
+        read(fd, &tmpchr, 1);
         
         buf[n] = tmpchr;
         n++;
