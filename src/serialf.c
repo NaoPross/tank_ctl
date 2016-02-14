@@ -144,14 +144,14 @@ struct packet read_packet()
             done = true;
         }
         else {
-            // TODO: (fix) this is horrible but it works
-            fprintf(stdout, "DEBUG: tmpchar=%s\n", tmpchr);
+            // TODO: check this thing
+            // fprintf(stdout, "DEBUG: chr=%c\n", chr);
 
             text_size = strlen(reading);
             mem_size = sizeof(reading) / sizeof(char);
 
             if (text_size +1 > mem_size) {
-                reading = (char*) realloc(reading, text_size +1);
+                reading = (char*) realloc(reading, (text_size +1) * sizeof(char));
             }
 
             reading[text_size++] = chr;
