@@ -1,3 +1,13 @@
+/** TANK_CTL **
+ *
+ * Abstract:
+ *
+ * Questo programma e` una simulazioe di un sistema di controllo di un
+ * serbatoio. Misurando da un sensore se il serbatoio dovesse essere pieno
+ * quest'ultimo deve suotarsi attraverso la rotazione di un servomotore.
+ */
+
+
 #include <Arduino.h>
 #include <Servo.h>
 
@@ -26,8 +36,6 @@ void setup()
     servo.attach(PIN_SERVO);
 
     pinMode(PIN_SENSOR, INPUT);
-    pinMode(PIN_SERVO, OUTPUT);
-
     pinMode(PIN_RED, OUTPUT);
     pinMode(PIN_GREEN, OUTPUT);
     pinMode(PIN_BLUE, OUTPUT);
@@ -37,7 +45,8 @@ void setup()
 
 void loop()
 {
-    int sensor_raw = 1024 - analogRead(PIN_SENSOR);
+    // reads how dark is the envionment
+    int sensor_raw = analogRead(PIN_SENSOR);
 
     if (sensor_raw > LVL_MAX) {
         digitalWrite(PIN_RED, LOW);
