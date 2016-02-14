@@ -15,7 +15,6 @@
 #define BAR_W 2
 
 #define DATA_N_MAX 1024.0
-#define DATA_N_SIZE 4
 
 
 int ibuf, cycle = 0;
@@ -35,29 +34,37 @@ void WUpdateFrame()
             BAR_W,
             ibuf/DATA_N_MAX*WIN_H
             );
+
+    // WFillRectangle(
 }
 
 /**********************************
  * FUNC MAIN
  **********************************/
-int main()
+int main(int argc, char **argv)
 {
     serial_init();
+    serial_sync(100);
+
     WCreate(WIN_H, WIN_W);
     
-    char *buf;
-    buf = (char*) calloc(DATA_N_SIZE, sizeof(char));
+    // char *buf;
+    // buf = (char*) calloc(DATA_N_SIZE, sizeof(char));
+    struct packet sensor_data;
 
     // app loop
     while (WIsOpen()) {
-        s_read(buf, DATA_N_SIZE);
-        fprintf(stdout, "DEBUG: buf = %s\n", buf);
+        // serial_read(buf, DATA_N_SIZE);
+        // fprintf(stdout, "DEBUG: buf = %s\n", buf);
+        sensor_data = read_packet();
 
-        if (sscanf(buf, "%d", &ibuf) != EOF) {
+        // if (sscanf(buf, "%d", &ibuf) != EOF) {
+        if (sscanf(sensor_data.msg, "%d", &ibuf) != EOF) {
             fprintf(stdout, "DEBUG: ibuf = %d\n", ibuf);
             cycle++;
         }
 
+        // this calls WUpdateFrame()
         WHandleEvents();
     }
 

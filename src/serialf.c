@@ -2,14 +2,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
 
+/* PACKET
+ * [msg_size|*msg]
+ *
+ * examples:
+ * [5|hello]
+ * [4|0123]
+ */
 
-const char *serial_port = "/dev/ttyUSB0";
+const char PACKET_START = '[';
+const char PACKET_SEPARATOR = '|';
+const char PACKET_END = ']';
+
+const char *SERIAL_PORT = "/dev/ttyUSB0";
 int fd;
 
 int set_interface_attribs (int fd, int speed, int parity)
@@ -70,9 +82,9 @@ void set_blocking (int fd, int should_block)
 
 void serial_init()
 {
-    fd = open(serial_port, O_RDWR | O_NOCTTY | O_SYNC);
+    fd = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0) {
-        fprintf(stderr, "Error opening %s\n", serial_port);
+        fprintf(stderr, "Error opening %s\n", SERIAL_PORT);
         exit(1);
     }
 
@@ -80,7 +92,68 @@ void serial_init()
     set_blocking(fd, 0);
 }
 
-void s_read(char *buf, int size)
+void serial_sync(int attempt_max)
+{
+    int attempt = 0;
+    char *tmpchr;
+
+    tmpchr = (char*) calloc(2, sizeof(char));
+
+    while (attempt <= attempt_max) {
+        serial_read(tmpchr, 1);
+        if (tmpchr[0] == PACKET_END) {
+            break;
+        }
+
+        attempt++;
+    }
+}
+
+struct packet read_packet()
+{
+    struct packet pkt;
+
+    bool done = false;
+    char *tmpchr;
+    char chr;
+
+    char *reading;
+    char *tmpreading;
+
+    tmpchr = (char*) calloc(2, sizeof(char));
+    reading = (char*) calloc(1, sizeof(char));
+    tmpreading = (char*) calloc(1, sizeof(char));
+
+    while (!done) {
+        serial_read(tmpchr, 1);
+        chr = tmpchr[0];
+
+        if (chr == '\n' || chr == PACKET_START) {
+            // does nothing
+        }
+        else if (chr == PACKET_SEPARATOR) {
+            pkt.msg_size = atoi(reading);
+            reading = "";
+        }
+        else if (chr == PACKET_END) {
+            pkt.msg = reading;
+            done = true;
+        }
+        else {
+            // TODO: (fix) this is horrible but it works
+            // fprintf(stdout, "DEBUG: tmpchar=%s\n", tmpchr);
+
+            tmpreading = reading;
+            reading = malloc(strlen(reading) + 1);
+            
+            strcat(reading, tmpreading);
+            strcat(reading, tmpchr);
+        }
+    }
+    return pkt;
+}
+
+void serial_read(char *buf, int size)
 {
     char tmpchr;
     int n = 0;

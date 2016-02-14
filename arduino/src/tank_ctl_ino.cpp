@@ -7,6 +7,7 @@
  * quest'ultimo deve suotarsi attraverso la rotazione di un servomotore.
  */
 
+#include "serial.h"
 
 #include <Arduino.h>
 #include <Servo.h>
@@ -25,6 +26,7 @@
 
 #define ROTATION_ANGLE 90
 #define OPEN_TIMEOUT 10000
+
 
 Servo servo;
 bool servo_open = false;
@@ -80,10 +82,15 @@ void loop()
     }
 
     // Serial data
+    struct packet sensor_data;
     char* n = "0000";
+
     // n = (char*) calloc(4, sizeof(char));
     sprintf(n, "%04d", sensor_raw);
-    Serial.print(n);
+    sensor_data.msg_size = 4;
+    sensor_data.msg = n;
+
+    send_packet(sensor_data);
 
     delay(D_TIME);
 }

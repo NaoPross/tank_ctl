@@ -1,16 +1,13 @@
 ## Settings for Arturo
-
-# CC=ano
-# 
-# MODEL=nano
-# CPU=atmega328
-# 
-# FLAGS=-m $(MODEL) --cpu $(CPU)
+CC=ano
+MODEL=nano
+CPU=atmega328
+FLAGS=-m $(MODEL) --cpu $(CPU)
 
 ## Settings for ino
-CC=ino
-MODEL=nano328
-FLAGS=-m $(MODEL)
+# CC=ino
+# MODEL=nano328
+# FLAGS=-m $(MODEL)
 
 all: build upload
 
