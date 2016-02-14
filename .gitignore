@@ -1,4 +1,6 @@
 **/.build_ano
+**/bin
+
 **/*.aux
 **/*.log
 **/*.gz

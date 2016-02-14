@@ -114,15 +114,17 @@ struct packet read_packet()
     struct packet pkt;
 
     bool done = false;
+    size_t text_size, mem_size;
+
     char *tmpchr;
     char chr;
 
     char *reading;
-    char *tmpreading;
 
-    tmpchr = (char*) calloc(2, sizeof(char));
-    reading = (char*) calloc(1, sizeof(char));
-    tmpreading = (char*) calloc(1, sizeof(char));
+    tmpchr = (char*) calloc(1, sizeof(char));
+
+    // reading = (char*) calloc(1, sizeof(char));
+    reading = (char*) malloc(sizeof(char));
 
     while (!done) {
         serial_read(tmpchr, 1);
@@ -133,7 +135,9 @@ struct packet read_packet()
         }
         else if (chr == PACKET_SEPARATOR) {
             pkt.msg_size = atoi(reading);
-            reading = "";
+            // reset
+            free(reading);
+            reading = (char*) malloc(sizeof(char));
         }
         else if (chr == PACKET_END) {
             pkt.msg = reading;
@@ -141,13 +145,17 @@ struct packet read_packet()
         }
         else {
             // TODO: (fix) this is horrible but it works
-            // fprintf(stdout, "DEBUG: tmpchar=%s\n", tmpchr);
+            fprintf(stdout, "DEBUG: tmpchar=%s\n", tmpchr);
 
-            tmpreading = reading;
-            reading = malloc(strlen(reading) + 1);
-            
-            strcat(reading, tmpreading);
-            strcat(reading, tmpchr);
+            text_size = strlen(reading);
+            mem_size = sizeof(reading) / sizeof(char);
+
+            if (text_size +1 > mem_size) {
+                reading = (char*) realloc(reading, text_size +1);
+            }
+
+            reading[text_size++] = chr;
+            reading[text_size] = '\0';
         }
     }
     return pkt;
